@@ -18,6 +18,7 @@ export async function uploadFile(file: File): Promise<UploadedDocument> {
     type: file.type,
     url: URL.createObjectURL(file),
     uploadedAt: new Date(),
+    file: file,
   }
 }
 
@@ -40,38 +41,71 @@ export async function submitOnboarding(data: OnboardingFormData): Promise<{
       }
     }
     
+    // Validate required documents
+    if (!data.documents?.gstCertificate) {
+      return {
+        success: false,
+        message: 'GST Certificate is required',
+      }
+    }
+    if (!data.documents?.panCard) {
+      return {
+        success: false,
+        message: 'PAN Card is required',
+      }
+    }
+    
     console.log('Sending to backend:', backendDTO)
+    console.log('Backend DTO JSON:', JSON.stringify(backendDTO, null, 2))
+    
+    // Create FormData for multipart request
+    const formData = new FormData()
+    
+    // Add files using the stored File objects
+    formData.append('gstCertificate', data.documents.gstCertificate.file)
+    formData.append('panCard', data.documents.panCard.file)
+    
+    // Add optional documents
+    if (data.documents.registrationDocument) {
+      formData.append('companyRegistrationDocument', data.documents.registrationDocument.file)
+    }
+    
+    if (data.documents.companyLogo) {
+      formData.append('companyLogo', data.documents.companyLogo.file)
+    }
+    
+    // Add company info as JSON string
+    const companyInfoJson = JSON.stringify(backendDTO)
+    formData.append('companyInfo', companyInfoJson)
+    
+    console.log('FormData entries:')
+    console.log('- gstCertificate:', data.documents.gstCertificate.file.name)
+    console.log('- panCard:', data.documents.panCard.file.name)
+    console.log('- companyInfo length:', companyInfoJson.length)
     
     // Send to backend API
-    const response = await fetch(`${API_BASE_URL}/onboarding/submit`, {
+    // Remove /api from base URL since backend path already includes it
+    const baseUrl = API_BASE_URL.replace(/\/api$/, '')
+    const response = await fetch(`${baseUrl}/c2d/api/v1/company/start-onboarding`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(backendDTO),
+      body: formData,
     })
     
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`)
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || `API error: ${response.status}`)
     }
     
     const result = await response.json()
     
     return {
-      success: result.success,
-      message: result.message || 'Application submitted successfully',
-      applicationId: result.data?.applicationId || `APP${Date.now()}`,
+      success: true,
+      message: result.message || 'Company Details uploaded successfully',
+      applicationId: result.applicationId || `APP${Date.now()}`,
     }
   } catch (error) {
     console.error('Error submitting onboarding:', error)
-    
-    // Fallback to mock response in case of error
-    await delay(2000)
-    return {
-      success: true,
-      message: 'Your application has been submitted successfully (Mock)',
-      applicationId: `APP${Date.now()}`,
-    }
+    throw error
   }
 }
 

@@ -31,49 +31,32 @@ export function ContactPerson({ initialData, onNext, onBack }: ContactPersonProp
   return (
     <Card className="max-w-3xl mx-auto animate-fade-in">
       <CardHeader>
-        <CardTitle>Contact Person Details</CardTitle>
+        <CardTitle>Support Contact Details</CardTitle>
         <CardDescription>
-          Primary contact person for your company account
+          Provide support contact information for your company
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <Input
-            label="Contact Person Name"
-            placeholder="Full name of the contact person"
-            required
-            error={errors.contactPersonName?.message}
-            {...register('contactPersonName')}
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              label="Phone Number"
-              placeholder="9876543210"
-              required
-              type="tel"
-              maxLength={10}
-              helperText="10-digit mobile number"
-              error={errors.phoneNumber?.message}
-              {...register('phoneNumber')}
-            />
-            <Input
-              label="Email Address"
-              placeholder="contact@company.com"
-              required
-              type="email"
-              error={errors.emailAddress?.message}
-              {...register('emailAddress')}
-            />
-          </div>
-
-          <Input
             label="Support Email"
-            placeholder="support@company.com (optional)"
+            placeholder="support@company.com"
+            required
             type="email"
-            helperText="Alternative email for support queries"
+            helperText="Primary email for support queries"
             error={errors.supportEmail?.message}
             {...register('supportEmail')}
+          />
+
+          <Input
+            label="Support Phone Number"
+            placeholder="9876543210"
+            required
+            type="tel"
+            maxLength={10}
+            helperText="10-digit mobile number for support"
+            error={errors.supportPhoneNumber?.message}
+            {...register('supportPhoneNumber')}
           />
 
           <div className="flex justify-between pt-6">

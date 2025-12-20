@@ -148,23 +148,13 @@ export function ReviewSubmit({ data, onBack, onEdit, onSubmit }: ReviewSubmitPro
           </div>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-gray-500">Name</p>
-              <p className="font-medium text-gray-900">{data.contactPerson.contactPersonName}</p>
+              <p className="text-gray-500">Support Email</p>
+              <p className="font-medium text-gray-900">{data.contactPerson.supportEmail}</p>
             </div>
             <div>
-              <p className="text-gray-500">Phone</p>
-              <p className="font-medium text-gray-900">{data.contactPerson.phoneNumber}</p>
+              <p className="text-gray-500">Support Phone Number</p>
+              <p className="font-medium text-gray-900">{data.contactPerson.supportPhoneNumber}</p>
             </div>
-            <div>
-              <p className="text-gray-500">Email</p>
-              <p className="font-medium text-gray-900">{data.contactPerson.emailAddress}</p>
-            </div>
-            {data.contactPerson.supportEmail && (
-              <div>
-                <p className="text-gray-500">Support Email</p>
-                <p className="font-medium text-gray-900">{data.contactPerson.supportEmail}</p>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -199,30 +189,18 @@ export function ReviewSubmit({ data, onBack, onEdit, onSubmit }: ReviewSubmitPro
             <div>
               <p className="text-gray-500">Account Number</p>
               <p className="font-medium text-gray-900">
-                ****{data.bankingDetails.accountNumber.slice(-4)}
+                ****{data.bankingDetails.bankAccountNumber.slice(-4)}
               </p>
             </div>
             <div>
               <p className="text-gray-500">IFSC Code</p>
               <p className="font-medium text-gray-900">{data.bankingDetails.ifscCode}</p>
             </div>
-            {data.bankingDetails.branchName && (
+            {data.bankingDetails.creditLimitForDistributors && (
               <div>
-                <p className="text-gray-500">Branch</p>
-                <p className="font-medium text-gray-900">{data.bankingDetails.branchName}</p>
-              </div>
-            )}
-            {data.bankingDetails.upiId && (
-              <div>
-                <p className="text-gray-500">UPI ID</p>
-                <p className="font-medium text-gray-900">{data.bankingDetails.upiId}</p>
-              </div>
-            )}
-            {data.bankingDetails.defaultCreditLimit && (
-              <div>
-                <p className="text-gray-500">Default Credit Limit</p>
+                <p className="text-gray-500">Credit Limit for Distributors</p>
                 <p className="font-medium text-gray-900">
-                  ₹{data.bankingDetails.defaultCreditLimit.toLocaleString('en-IN')}
+                  ₹{data.bankingDetails.creditLimitForDistributors}
                 </p>
               </div>
             )}

@@ -54,8 +54,8 @@ export function BankingDetails({ initialData, onNext, onBack }: BankingDetailsPr
               required
               type="text"
               helperText="9-18 digit account number"
-              error={errors.accountNumber?.message}
-              {...register('accountNumber')}
+              error={errors.bankAccountNumber?.message}
+              {...register('bankAccountNumber')}
             />
             <Input
               label="IFSC Code"
@@ -72,40 +72,12 @@ export function BankingDetails({ initialData, onNext, onBack }: BankingDetailsPr
           </div>
 
           <Input
-            label="Branch Name"
-            placeholder="e.g., Mumbai Main Branch (optional)"
-            error={errors.branchName?.message}
-            {...register('branchName')}
+            label="Credit Limit for Distributors"
+            placeholder="50000 (optional)"
+            helperText="Default credit limit in INR"
+            error={errors.creditLimitForDistributors?.message}
+            {...register('creditLimitForDistributors')}
           />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              label="UPI ID"
-              placeholder="company@upi (optional)"
-              helperText="For quick payments"
-              error={errors.upiId?.message}
-              {...register('upiId')}
-            />
-            <Controller
-              name="defaultCreditLimit"
-              control={control}
-              render={({ field }) => (
-                <Input
-                  label="Default Distributor Credit Limit"
-                  placeholder="50000"
-                  type="number"
-                  helperText="In INR (optional)"
-                  error={errors.defaultCreditLimit?.message}
-                  {...field}
-                  value={field.value || ''}
-                  onChange={(e) => {
-                    const value = e.target.value
-                    field.onChange(value === '' ? undefined : Number(value))
-                  }}
-                />
-              )}
-            />
-          </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800">

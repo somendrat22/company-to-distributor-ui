@@ -15,19 +15,19 @@ export function transformToBackendDTO(
     legalName: companyRegistration.legalName,
     gstNumber: companyRegistration.gstNumber,
     panNumber: companyRegistration.panNumber,
-    cinNumber: companyRegistration.cinNumber || undefined,
+    cinNumber: companyRegistration.cinNumber || '',
     companyType: companyRegistration.companyType,
 
     // Business Address fields
     addressLine1: businessAddress.addressLine1,
-    addressLine2: businessAddress.addressLine2 || undefined,
-    addressLine3: businessAddress.addressLine3 || undefined,
+    addressLine2: businessAddress.addressLine2 || '',
+    addressLine3: businessAddress.addressLine3 || '',
     city: businessAddress.city,
     state: businessAddress.state,
     country: businessAddress.country,
     pincode: parseInt(businessAddress.pincode, 10),
-    geoLatitude: businessAddress.geoLatitude || undefined,
-    geoLongitude: businessAddress.geoLongitude || undefined,
+    geoLatitude: businessAddress.geoLatitude || '',
+    geoLongitude: businessAddress.geoLongitude || '',
 
     // Contact Person fields
     supportEmail: contactPerson.supportEmail,
@@ -37,7 +37,7 @@ export function transformToBackendDTO(
     bankAccountNumber: bankingDetails.bankAccountNumber,
     bankName: bankingDetails.bankName,
     ifscCode: bankingDetails.ifscCode,
-    creditLimitForDistributors: bankingDetails.creditLimitForDistributors || undefined,
+    creditLimitForDistributors: bankingDetails.creditLimitForDistributors || '',
   }
 }
 

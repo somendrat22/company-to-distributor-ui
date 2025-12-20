@@ -29,7 +29,7 @@ export interface CompanyOnboardingRequestDto {
 export interface CompanyRegistrationData {
   companyName: string
   legalName: string
-  companyType: string
+  companyType: CompanyType
   gstNumber: string
   panNumber: string
   cinNumber?: string
@@ -66,6 +66,7 @@ export interface UploadedDocument {
   type: string
   url: string
   uploadedAt: Date
+  file: File
 }
 
 export interface DocumentUploadData {

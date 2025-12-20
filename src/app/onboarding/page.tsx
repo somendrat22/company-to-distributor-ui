@@ -62,10 +62,13 @@ export default function OnboardingPage() {
         setApplicationId(result.applicationId)
         clearLocalStorage(STORAGE_KEY)
         setCurrentStep(6)
+      } else {
+        alert(`Submission failed: ${result.message}`)
       }
     } catch (error) {
       console.error('Submission error:', error)
-      alert('Failed to submit application. Please try again.')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit application. Please try again.'
+      alert(`Error: ${errorMessage}`)
     }
   }
 
