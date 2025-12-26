@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
 import { ArrowRight, Building2, Users, TrendingUp, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -34,13 +35,15 @@ export function Landing({ onGetStarted }: LandingProps) {
             Register Your Company
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="text-lg px-8"
-          >
-            Already Registered? Login
-          </Button>
+          <Link href="/login">
+            <Button
+              variant="outline"
+              size="lg"
+              className="text-lg px-8"
+            >
+              Already Registered? Login
+            </Button>
+          </Link>
         </div>
       </div>
 

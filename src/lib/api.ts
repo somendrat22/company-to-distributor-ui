@@ -1,8 +1,106 @@
-import { OnboardingFormData, UploadedDocument, CompanyOnboardingRequestDto } from '@/types'
+import { OnboardingFormData, UploadedDocument, CompanyOnboardingRequestDto, LoginRequest, LoginResponse, User, CreateRoleRequest, CreateRoleResponse, InviteEmployeeRequest, InviteEmployeeResponse, Operation, Role } from '@/types'
 import { transformToBackendDTO, validateBackendDTO } from './transformers'
 
 // API Configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+
+// Helper function to get auth headers
+function getAuthHeaders(): HeadersInit {
+  const token = getAuthToken()
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+  }
+}
+
+// Auth API: Login user
+export async function loginUser(credentials: LoginRequest): Promise<{
+  success: boolean
+  message: string
+  user?: User
+}> {
+  try {
+    const baseUrl = API_BASE_URL.replace(/\/api$/, '')
+    const response = await fetch(`${baseUrl}/c2d/api/v1/user/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Invalid email or password')
+    }
+
+    const data: LoginResponse = await response.json()
+
+    // Transform response to User object
+    const user: User = {
+      email: data.email,
+      fullName: data.fullName,
+      phoneNumber: data.phoneNumber,
+      addressLine1: data.addressLine1,
+      addressLine2: data.addressLine2,
+      addressLine3: data.addressLine3,
+      pincode: data.pincode,
+      companyUser: data.companyUser,
+      roles: data.roles,
+      company: data.companyLoginResp,
+      token: data.token,
+    }
+
+    // Store token and user in localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('auth_token', data.token)
+      localStorage.setItem('user', JSON.stringify(user))
+    }
+
+    return {
+      success: true,
+      message: 'Login successful',
+      user,
+    }
+  } catch (error) {
+    console.error('Login error:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Login failed. Please try again.',
+    }
+  }
+}
+
+// Auth API: Logout user
+export function logoutUser(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('user')
+  }
+}
+
+// Auth API: Get current user from localStorage
+export function getCurrentUser(): User | null {
+  if (typeof window !== 'undefined') {
+    const userStr = localStorage.getItem('user')
+    if (userStr) {
+      try {
+        return JSON.parse(userStr)
+      } catch {
+        return null
+      }
+    }
+  }
+  return null
+}
+
+// Auth API: Get auth token
+export function getAuthToken(): string | null {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('auth_token')
+  }
+  return null
+}
 
 // Simulate API delay (for mock mode)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
@@ -114,6 +212,100 @@ export async function checkGSTExists(gstNumber: string): Promise<boolean> {
   await delay(500)
   // Simulate: GST already exists if it starts with '29'
   return gstNumber.startsWith('29')
+}
+
+// Employee & Role Management API
+
+// Fetch all available operations
+export async function fetchAllOperations(): Promise<Operation[]> {
+  try {
+    const baseUrl = API_BASE_URL.replace(/\/api$/, '')
+    const response = await fetch(`${baseUrl}/c2d/api/v1/operations`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch operations')
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error fetching operations:', error)
+    throw error
+  }
+}
+
+// Create a new role with selected operations
+export async function createRole(roleData: CreateRoleRequest): Promise<CreateRoleResponse> {
+  try {
+    const baseUrl = API_BASE_URL.replace(/\/api$/, '')
+    const response = await fetch(`${baseUrl}/c2d/api/v1/roles`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(roleData),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Failed to create role')
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error creating role:', error)
+    throw error
+  }
+}
+
+// Fetch all roles for the company
+export async function fetchCompanyRoles(): Promise<Role[]> {
+  try {
+    const baseUrl = API_BASE_URL.replace(/\/api$/, '')
+    const response = await fetch(`${baseUrl}/c2d/api/v1/roles`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch roles')
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error fetching roles:', error)
+    throw error
+  }
+}
+
+// Invite an employee
+export async function inviteEmployee(employeeData: InviteEmployeeRequest): Promise<InviteEmployeeResponse> {
+  try {
+    const baseUrl = API_BASE_URL.replace(/\/api$/, '')
+    const response = await fetch(`${baseUrl}/c2d/api/v1/users/invite`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(employeeData),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Failed to invite employee')
+    }
+
+    const result = await response.json()
+    return {
+      success: true,
+      message: result.message || 'Employee invited successfully',
+      userId: result.userId,
+    }
+  } catch (error) {
+    console.error('Error inviting employee:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to invite employee',
+    }
+  }
 }
 
 // Mock API: Validate bank account
