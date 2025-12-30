@@ -10,12 +10,12 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
-import { CreateRoleModal } from '@/components/employees/CreateRoleModal'
-import { fetchAllOperations, fetchCompanyRoles, createRole, inviteEmployee } from '@/lib/api'
-import { Operation, Role } from '@/types'
-import { UserPlus, Plus, Shield, Check, ArrowLeft, AlertCircle } from 'lucide-react'
+import { fetchCompanyRoles, inviteEmployee, fetchAllOperations, createRole } from '@/lib/api'
+import { Role, Operation } from '@/types'
+import { UserPlus, Shield, Check, ArrowLeft, AlertCircle, Plus, X } from 'lucide-react'
 import Link from 'next/link'
-import { canInviteEmployee } from '@/lib/permissions'
+import { canInviteEmployee, canCreateRole } from '@/lib/permissions'
+import { CreateRoleModal } from '@/components/employees/CreateRoleModal'
 
 const inviteEmployeeSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -36,6 +36,7 @@ function InviteEmployeeContent() {
   const [roles, setRoles] = useState<Role[]>([])
   const [selectedRoleIds, setSelectedRoleIds] = useState<Set<string>>(new Set())
   const [isCreateRoleModalOpen, setIsCreateRoleModalOpen] = useState(false)
+  const [viewingRole, setViewingRole] = useState<Role | null>(null)
   const [isLoadingData, setIsLoadingData] = useState(true)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
@@ -56,40 +57,57 @@ function InviteEmployeeContent() {
   const loadData = async () => {
     setIsLoadingData(true)
     try {
-      const [opsData, rolesData] = await Promise.all([
-        fetchAllOperations(),
-        fetchCompanyRoles(),
-      ])
-      setOperations(opsData)
+      const rolesData = await fetchCompanyRoles()
+      console.log('Roles fetched:', rolesData)
       setRoles(rolesData)
+      console.log('Roles state set:', rolesData.length, 'roles')
+      
+      // Fetch operations for role creation
+      try {
+        const opsData = await fetchAllOperations()
+        console.log('Operations fetched:', opsData.length, 'operations')
+        setOperations(opsData)
+      } catch (opsErr) {
+        console.warn('Could not fetch operations:', opsErr)
+        setOperations([])
+      }
     } catch (err) {
-      setError('Failed to load data. Please refresh the page.')
+      console.error('Error loading roles:', err)
+      setError('Failed to load roles. Please refresh the page.')
     } finally {
       setIsLoadingData(false)
     }
   }
 
-  const handleCreateRole = async (roleName: string, operationIds: string[]) => {
+
+  const handleCreateRole = async (roleName: string, operationsSysId: string[]) => {
     try {
       const newRole = await createRole({
         roleName,
-        operationIds,
+        operationsSysId,
       })
       setRoles([...roles, newRole])
-      setSelectedRoleIds(new Set([...selectedRoleIds, newRole.roleId]))
+      setSelectedRoleIds(new Set([...selectedRoleIds, newRole.sysId]))
     } catch (err) {
       throw err
     }
   }
 
-  const toggleRole = (roleId: string) => {
+  const toggleRole = (roleSysId: string) => {
     const newSelected = new Set(selectedRoleIds)
-    if (newSelected.has(roleId)) {
-      newSelected.delete(roleId)
+    if (newSelected.has(roleSysId)) {
+      newSelected.delete(roleSysId)
     } else {
-      newSelected.add(roleId)
+      newSelected.add(roleSysId)
     }
     setSelectedRoleIds(newSelected)
+  }
+
+  // Extract role name without company prefix (format: CompanyName_RoleName)
+  const getDisplayRoleName = (fullRoleName: string) => {
+    const parts = fullRoleName.split('_')
+    // If there's an underscore, return everything after the first part (company name)
+    return parts.length > 1 ? parts.slice(1).join('_') : fullRoleName
   }
 
   const onSubmit = async (data: InviteEmployeeFormData) => {
@@ -103,14 +121,15 @@ function InviteEmployeeContent() {
 
     try {
       const result = await inviteEmployee({
-        email: data.email,
         fullName: data.fullName,
+        email: data.email,
+        status: 'ACTIVE',
         phoneNumber: data.phoneNumber,
         addressLine1: data.addressLine1,
         addressLine2: data.addressLine2,
         addressLine3: data.addressLine3,
+        roles: Array.from(selectedRoleIds),
         pincode: parseInt(data.pincode, 10),
-        roleIds: Array.from(selectedRoleIds),
       })
 
       if (result.success) {
@@ -284,20 +303,22 @@ function InviteEmployeeContent() {
                   <div>
                     <CardTitle>Assign Roles</CardTitle>
                     <CardDescription>
-                      Select existing roles or create a new one with specific permissions
+                      Select existing roles or create a new one
                     </CardDescription>
                   </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsCreateRoleModalOpen(true)}
-                  disabled={isLoadingData}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create New Role
-                </Button>
+                {canCreateRole(user) && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsCreateRoleModalOpen(true)}
+                    disabled={isLoadingData}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create New Role
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent>
@@ -309,14 +330,7 @@ function InviteEmployeeContent() {
                 <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                   <Shield className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-600 mb-2">No roles available</p>
-                  <p className="text-sm text-gray-500 mb-4">Create your first role to get started</p>
-                  <Button
-                    type="button"
-                    onClick={() => setIsCreateRoleModalOpen(true)}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Role
-                  </Button>
+                  <p className="text-sm text-gray-500">Please contact your administrator to create roles first</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -325,12 +339,13 @@ function InviteEmployeeContent() {
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {roles.map((role) => {
-                      const isSelected = selectedRoleIds.has(role.roleId)
+                      const isSelected = selectedRoleIds.has(role.sysId)
                       return (
                         <button
                           key={role.roleId}
                           type="button"
-                          onClick={() => toggleRole(role.roleId)}
+                          onClick={() => toggleRole(role.sysId)}
+                          onDoubleClick={() => setViewingRole(role)}
                           className={`flex items-start gap-3 p-4 rounded-lg border-2 transition-all text-left ${
                             isSelected
                               ? 'border-primary-500 bg-primary-50'
@@ -348,7 +363,7 @@ function InviteEmployeeContent() {
                           </div>
                           <div className="flex-1">
                             <p className={`font-medium ${isSelected ? 'text-primary-900' : 'text-gray-900'}`}>
-                              {role.roleName}
+                              {getDisplayRoleName(role.roleName)}
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
                               {role.operations.length} permission(s)
@@ -389,6 +404,61 @@ function InviteEmployeeContent() {
         onCreateRole={handleCreateRole}
         operations={operations}
       />
+
+      {/* Role Details Modal */}
+      {viewingRole && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setViewingRole(null)}>
+          <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{getDisplayRoleName(viewingRole.roleName)}</h2>
+                <p className="text-sm text-gray-500 mt-1">{viewingRole.operations.length} permissions assigned</p>
+              </div>
+              <button
+                onClick={() => setViewingRole(null)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 overflow-y-auto flex-1">
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Permissions</h3>
+              <div className="space-y-2">
+                {viewingRole.operations.map((operation) => (
+                  <div
+                    key={operation.sys_id}
+                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200"
+                  >
+                    <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">
+                        {operation.operationName.replace(/_/g, ' ')}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {operation.operationType}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setViewingRole(null)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

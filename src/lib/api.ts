@@ -9,7 +9,7 @@ function getAuthHeaders(): HeadersInit {
   const token = getAuthToken()
   return {
     'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ${token}` }),
+    ...(token && { 'Authorization': token }),
   }
 }
 
@@ -220,7 +220,7 @@ export async function checkGSTExists(gstNumber: string): Promise<boolean> {
 export async function fetchAllOperations(): Promise<Operation[]> {
   try {
     const baseUrl = API_BASE_URL.replace(/\/api$/, '')
-    const response = await fetch(`${baseUrl}/c2d/api/v1/operations`, {
+    const response = await fetch(`${baseUrl}/c2d/api/v1/operations/all`, {
       method: 'GET',
       headers: getAuthHeaders(),
     })
@@ -240,7 +240,7 @@ export async function fetchAllOperations(): Promise<Operation[]> {
 export async function createRole(roleData: CreateRoleRequest): Promise<CreateRoleResponse> {
   try {
     const baseUrl = API_BASE_URL.replace(/\/api$/, '')
-    const response = await fetch(`${baseUrl}/c2d/api/v1/roles`, {
+    const response = await fetch(`${baseUrl}/c2d/api/v1/auth/create-role`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(roleData),
@@ -262,7 +262,7 @@ export async function createRole(roleData: CreateRoleRequest): Promise<CreateRol
 export async function fetchCompanyRoles(): Promise<Role[]> {
   try {
     const baseUrl = API_BASE_URL.replace(/\/api$/, '')
-    const response = await fetch(`${baseUrl}/c2d/api/v1/roles`, {
+    const response = await fetch(`${baseUrl}/c2d/api/v1/company/get-roles`, {
       method: 'GET',
       headers: getAuthHeaders(),
     })
@@ -281,10 +281,18 @@ export async function fetchCompanyRoles(): Promise<Role[]> {
 // Invite an employee
 export async function inviteEmployee(employeeData: InviteEmployeeRequest): Promise<InviteEmployeeResponse> {
   try {
+    const token = getAuthToken()
+    console.log('Token exists:', !!token)
+    console.log('Token value:', token ? `${token.substring(0, 20)}...` : 'null')
+    
     const baseUrl = API_BASE_URL.replace(/\/api$/, '')
-    const response = await fetch(`${baseUrl}/c2d/api/v1/users/invite`, {
+    const headers = getAuthHeaders()
+    console.log('Request headers:', headers)
+    console.log('Request body:', JSON.stringify(employeeData, null, 2))
+    
+    const response = await fetch(`${baseUrl}/c2d/api/v1/company/invite-employee`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers,
       body: JSON.stringify(employeeData),
     })
 
@@ -296,8 +304,8 @@ export async function inviteEmployee(employeeData: InviteEmployeeRequest): Promi
     const result = await response.json()
     return {
       success: true,
-      message: result.message || 'Employee invited successfully',
-      userId: result.userId,
+      message: 'Employee invited successfully',
+      userId: result.sysId || result.userId,
     }
   } catch (error) {
     console.error('Error inviting employee:', error)

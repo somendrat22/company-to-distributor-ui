@@ -9,7 +9,7 @@ import { Operation, OperationGroup } from '@/types'
 interface CreateRoleModalProps {
   isOpen: boolean
   onClose: () => void
-  onCreateRole: (roleName: string, selectedOperationIds: string[]) => Promise<void>
+  onCreateRole: (roleName: string, operationsSysId: string[]) => Promise<void>
   operations: Operation[]
 }
 
@@ -18,6 +18,18 @@ export function CreateRoleModal({ isOpen, onClose, onCreateRole, operations }: C
   const [selectedOperations, setSelectedOperations] = useState<Set<string>>(new Set())
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
 
   // Group operations by type
   const operationGroups: OperationGroup[] = operations.reduce((acc, operation) => {
@@ -85,10 +97,10 @@ export function CreateRoleModal({ isOpen, onClose, onCreateRole, operations }: C
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-2xl font-bold text-gray-900">Create New Role</h2>
           <button
             onClick={onClose}
@@ -99,7 +111,7 @@ export function CreateRoleModal({ isOpen, onClose, onCreateRole, operations }: C
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSubmit} className="flex flex-col h-full">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           <div className="p-6 overflow-y-auto flex-1">
             {error && (
               <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4">
@@ -189,7 +201,7 @@ export function CreateRoleModal({ isOpen, onClose, onCreateRole, operations }: C
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
             <Button
               type="button"
               variant="outline"

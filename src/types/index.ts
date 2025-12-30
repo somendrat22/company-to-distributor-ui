@@ -170,7 +170,7 @@ export interface User {
 // Employee Invitation types
 export interface CreateRoleRequest {
   roleName: string
-  operationIds: string[]
+  operationsSysId: string[]
 }
 
 export interface CreateRoleResponse {
@@ -183,14 +183,15 @@ export interface CreateRoleResponse {
 }
 
 export interface InviteEmployeeRequest {
-  email: string
   fullName: string
+  email: string
+  status: string
   phoneNumber: string
   addressLine1: string
   addressLine2?: string
   addressLine3?: string
+  roles: string[]
   pincode: number
-  roleIds: string[]
 }
 
 export interface InviteEmployeeResponse {

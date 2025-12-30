@@ -174,6 +174,33 @@ export function canViewUsers(user: User | null): boolean {
 }
 
 /**
+ * Sales Order permissions
+ */
+export function canViewSalesOrders(user: User | null): boolean {
+  return hasPermission(user, PERMISSIONS.SO_VIEW)
+}
+
+export function canCreateSalesOrder(user: User | null): boolean {
+  return hasPermission(user, PERMISSIONS.SO_CREATE)
+}
+
+export function canUpdateSalesOrder(user: User | null): boolean {
+  return hasPermission(user, PERMISSIONS.SO_UPDATE)
+}
+
+export function canCancelSalesOrder(user: User | null): boolean {
+  return hasPermission(user, PERMISSIONS.SO_CANCEL)
+}
+
+export function canDispatchSalesOrder(user: User | null): boolean {
+  return hasPermission(user, PERMISSIONS.SO_DISPATCH)
+}
+
+export function canDeliverSalesOrder(user: User | null): boolean {
+  return hasPermission(user, PERMISSIONS.SO_DELIVER)
+}
+
+/**
  * Check if user can manage products
  */
 export function canManageProducts(user: User | null): boolean {
