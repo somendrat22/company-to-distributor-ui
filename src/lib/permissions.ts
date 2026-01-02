@@ -201,6 +201,37 @@ export function canDeliverSalesOrder(user: User | null): boolean {
 }
 
 /**
+ * Product permissions
+ */
+export function canViewProducts(user: User | null): boolean {
+  return hasPermission(user, PERMISSIONS.PRODUCT_VIEW)
+}
+
+export function canCreateProduct(user: User | null): boolean {
+  return hasPermission(user, PERMISSIONS.PRODUCT_CREATE)
+}
+
+export function canUpdateProduct(user: User | null): boolean {
+  return hasPermission(user, PERMISSIONS.PRODUCT_UPDATE)
+}
+
+export function canDeleteProduct(user: User | null): boolean {
+  return hasPermission(user, PERMISSIONS.PRODUCT_DELETE)
+}
+
+export function canUpdateProductPrice(user: User | null): boolean {
+  return hasPermission(user, PERMISSIONS.PRODUCT_PRICE_UPDATE)
+}
+
+export function canUpdateProductStock(user: User | null): boolean {
+  return hasPermission(user, PERMISSIONS.PRODUCT_STOCK_UPDATE)
+}
+
+export function canBulkUploadProducts(user: User | null): boolean {
+  return hasPermission(user, PERMISSIONS.PRODUCT_BULK_UPLOAD)
+}
+
+/**
  * Check if user can manage products
  */
 export function canManageProducts(user: User | null): boolean {
@@ -208,6 +239,29 @@ export function canManageProducts(user: User | null): boolean {
     PERMISSIONS.PRODUCT_CREATE,
     PERMISSIONS.PRODUCT_UPDATE,
     PERMISSIONS.PRODUCT_DELETE,
+  ])
+}
+
+/**
+ * Payment permissions
+ */
+export function canInitiatePayment(user: User | null): boolean {
+  return hasPermission(user, PERMISSIONS.PAYMENT_INITIATE)
+}
+
+export function canReceivePayment(user: User | null): boolean {
+  return hasPermission(user, PERMISSIONS.PAYMENT_RECEIVE)
+}
+
+export function canRefundPayment(user: User | null): boolean {
+  return hasPermission(user, PERMISSIONS.PAYMENT_REFUND)
+}
+
+export function canViewPayments(user: User | null): boolean {
+  return hasAnyPermission(user, [
+    PERMISSIONS.PAYMENT_INITIATE,
+    PERMISSIONS.PAYMENT_RECEIVE,
+    PERMISSIONS.PAYMENT_REFUND,
   ])
 }
 
